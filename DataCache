@@ -4,13 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Array;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class DataCache {
-    private static final String CUSTOMER_FILE_PATH = "[insert file path]/flightreservationredux/customers_cache.json";
-    private static final String BOOKING_FILE_PATH = "[insert file path]/flightreservationredux/booking_cache.json";
+    private static final String CUSTOMER_FILE_PATH = "F:/Diploma of IT/SEM 2/Stage1_Jose/flightreservationredux/customers_cache.json";
+    private static final String BOOKING_FILE_PATH = "F:/Diploma of IT/SEM 2/Stage1_Jose/flightreservationredux/booking_cache.json";
 
     private Map<Integer, Customer> customerCache;
     private Map<Integer, Booking> bookingCache;
@@ -18,12 +20,17 @@ public class DataCache {
     public DataCache() {
         customerCache = new HashMap<>();
         bookingCache = new HashMap<>();
-        loadCache();
+        loadCacheFromDatabase();
     }
 
     public void putCustomer(Customer customer) {
         customerCache.put(customer.getId(), customer);
         saveCache(CUSTOMER_FILE_PATH, customerCache);
+        try {
+            db.addCustomer(customer); // Synchronize with the MySQL database
+        } catch (SQLException e) {
+            e.printStackTrace(); // Handle synchronization error
+        }
     }
 
     public Customer getCustomer(int id) {
@@ -33,6 +40,11 @@ public class DataCache {
     public void removeCustomer(int id) {
         customerCache.remove(id);
         saveCache(CUSTOMER_FILE_PATH, customerCache);
+        try {
+            db.deleteCustomer(id); // Synchronize with the MySQL database
+        } catch (SQLException e) {
+            e.printStackTrace(); // Handle synchronization error
+        }
     }
 
     public ArrayList<Customer> getAllCustomers() {
@@ -42,6 +54,11 @@ public class DataCache {
     public void putBooking(Booking booking) {
         bookingCache.put(booking.getId(), booking);
         saveCache(BOOKING_FILE_PATH, bookingCache);
+        try {
+            db.addBooking(booking); // Synchronize with the MySQL database
+        } catch (SQLException e) {
+            e.printStackTrace(); // Handle synchronization error
+        }
     }
 
     public Booking getBooking(int id) {
@@ -51,10 +68,31 @@ public class DataCache {
     public void removeBooking(int id) {
         bookingCache.remove(id);
         saveCache(BOOKING_FILE_PATH, bookingCache);
+        try {
+            db.deleteBooking(id); // Synchronize with the MySQL database
+        } catch (SQLException e) {
+            e.printStackTrace(); // Handle synchronization error
+        }
     }
 
     public ArrayList<Booking> getAllBookings() {
         return new ArrayList<>(bookingCache.values());
+    }
+
+    public void refreshCustomerCache(){
+        ArrayList<Customer> customers = db.getCustomers();
+        customerCache.clear();
+        for (Customer customer : customers) {
+            customerCache.put(customer.getId(), customer);
+        }
+    }
+
+    public void refreshBookingCache(){
+        ArrayList<Booking> bookings = db.getBookings();
+        bookingCache.clear();
+        for (Booking booking : bookings) {
+            bookingCache.put(booking.getId(), booking);
+        }
     }
 
     private void loadCache() {
@@ -81,6 +119,18 @@ public class DataCache {
             mapper.writeValue(file, cache);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void loadCacheFromDatabase() {
+        ArrayList<Customer> customers = db.getCustomers();
+        for (Customer customer : customers) {
+            customerCache.put(customer.getId(), customer);
+        }
+
+        ArrayList<Booking> bookings = db.getBookings();
+        for (Booking booking : bookings) {
+            bookingCache.put(booking.getId(), booking);
         }
     }
 }
