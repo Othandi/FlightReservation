@@ -1,1 +1,2 @@
 # FlightReservation
+# this is a simple Java project that I created for an assessment at uni, this code uses Jav GUI and is connected to a SQL database that I made through local host. The SQL file is also in this repository, you can download it and import it to your database so you can try out the code properly. Currently, the code lacks the following: display the bookings and customers when database is off, verification for bookings (i.e. picking a country, but you chose a different city still goes through), and limit the amount of bookings that can be made for one person.
